@@ -10,3 +10,8 @@ class MovieSerializers(serializers.ModelSerializer):
     class Meta:
         model = Movie
         fields = ("name", "year", "genre", "actor")
+
+class CommitMoviesSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = CommitMovie
+    fields = ("title", "movie", "author")

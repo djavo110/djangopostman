@@ -6,6 +6,7 @@ from .models import *
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
+from drf_yasg.utils import swagger_auto_schema
 
 # @api_view(['GET', 'POST'])
 # def actor_get_post(request):
@@ -33,7 +34,9 @@ class ActorAll(APIView):
         serializer = ActorSerializers(actor, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
+    
 class ActorCreate(APIView):
+    @swagger_auto_schema(request_body=ActorSerializers)
     def post(self, request):
         serializer = ActorSerializers(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -41,6 +44,7 @@ class ActorCreate(APIView):
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
     
 class ActorUpdate(APIView):
+    @swagger_auto_schema(request_body=ActorSerializers)
     def put(self, request, pk):
         actor = get_object_or_404(Actor, pk=pk)
         serializer = ActorSerializers(actor, data=request.data) 
@@ -49,6 +53,7 @@ class ActorUpdate(APIView):
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 class ActorDelete(APIView):
+    @swagger_auto_schema(request_body=ActorSerializers)
     def delete(self, request, pk):
         actor = get_object_or_404(Actor, pk=pk)
         actor.delete()
@@ -61,6 +66,7 @@ class MovieAll(APIView):
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     
 class MovieCreate(APIView):
+    @swagger_auto_schema(request_body=MovieSerializers)
     def post(self, request):
         serializer = MovieSerializers(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -68,6 +74,7 @@ class MovieCreate(APIView):
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 class MovieUpdate(APIView):
+    @swagger_auto_schema(request_body=MovieSerializers)
     def put(self, request, pk):
         movie = get_object_or_404(Movie, pk=pk)
         serializer = MovieSerializers(movie, data=request.data)
@@ -76,6 +83,7 @@ class MovieUpdate(APIView):
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
     
 class MovieDelete(APIView):
+    @swagger_auto_schema(request_body=MovieSerializers)
     def delete(self, request, pk):
         movie = get_object_or_404(Movie, pk=pk)
         movie.delete()
@@ -104,3 +112,31 @@ class MoviesWithLessActorsView(APIView):
         movies = Movie.objects.annotate(actor_count=Count('actor')).filter(actor_count__lt=3)
         serializer = MovieSerializers(movies, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class CommitMovieAll(APIView):
+    def get(self, request):
+        commit = CommitMovie.objects.all()
+        serializer = CommitMoviesSerializers(commit, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+    
+class CommitMovieCreate(APIView):
+    @swagger_auto_schema(request_body=CommitMoviesSerializers)
+    def post(self, request):
+        serializer = CommitMoviesSerializers(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+    
+class CommitMovieUpdate(APIView):
+    def put(self, request, pk):
+        commit = get_object_or_404(CommitMovie, pk=pk)
+        serializer = CommitMoviesSerializers(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+class CommitMovieDelete(APIView):
+    def delete(self, request, pk):
+        commit = get_object_or_404(CommitMovie, pk=pk)
+        commit.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
