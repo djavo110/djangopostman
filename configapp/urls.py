@@ -1,11 +1,13 @@
 from django.urls import path
 from configapp.views import *
+from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     path('get/', ActorAll.as_view()),
     path('post/', ActorCreate.as_view()),
     path('put/<int:pk>/', ActorUpdate.as_view()),
     path('delete/<int:pk>/', ActorDelete.as_view()),
+    path('auth/', obtain_auth_token),
     path('getM/', MovieAll.as_view()),
     path('postM/', MovieCreate.as_view()),
     path('putM/<int:pk>/', MovieUpdate.as_view()),

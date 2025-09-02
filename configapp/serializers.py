@@ -14,4 +14,5 @@ class MovieSerializers(serializers.ModelSerializer):
 class CommitMoviesSerializers(serializers.ModelSerializer):
     class Meta:
         model = CommitMovie
-    fields = ("title", "movie", "author")
+        fields = ("id", "title", "movie", "author")
+        read_only_fields = ["author"]

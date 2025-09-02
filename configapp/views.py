@@ -115,19 +115,23 @@ class MoviesWithLessActorsView(APIView):
 
 class CommitMovieAll(APIView):
     def get(self, request):
-        commit = CommitMovie.objects.all()
+        commit = CommitMovie.objects.filter(author=request.user)
         serializer = CommitMoviesSerializers(commit, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     
 class CommitMovieCreate(APIView):
     @swagger_auto_schema(request_body=CommitMoviesSerializers)
     def post(self, request):
+        response = {"success":True}
         serializer = CommitMoviesSerializers(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        if serializer.is_valid(raise_exception=True):
+            serializer.save(author=request.user)
+            response['data'] = serializer.data
+            return Response(data=response)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
     
 class CommitMovieUpdate(APIView):
+    @swagger_auto_schema(request_body=CommitMoviesSerializers)
     def put(self, request, pk):
         commit = get_object_or_404(CommitMovie, pk=pk)
         serializer = CommitMoviesSerializers(data=request.data)
@@ -136,6 +140,7 @@ class CommitMovieUpdate(APIView):
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 class CommitMovieDelete(APIView):
+    @swagger_auto_schema(request_body=CommitMoviesSerializers)  
     def delete(self, request, pk):
         commit = get_object_or_404(CommitMovie, pk=pk)
         commit.delete()
