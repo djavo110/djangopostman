@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .serializers import *
@@ -7,6 +8,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
 from drf_yasg.utils import swagger_auto_schema
+from .make_token import *
 
 # @api_view(['GET', 'POST'])
 # def actor_get_post(request):
@@ -145,3 +147,13 @@ class CommitMovieDelete(APIView):
         commit = get_object_or_404(CommitMovie, pk=pk)
         commit.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class Login(APIView):
+    @swagger_auto_schema(request_body=LoginSerializer)
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(User, username=serializer.validated_data.get("username"))
+        print (user)
+        token = get_tokens_for_user(user)
+        return Response(data=token, status=status.HTTP_200_OK)
