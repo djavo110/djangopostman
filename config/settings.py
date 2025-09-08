@@ -105,18 +105,19 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
+
 SWAGGER_SETTINGS = {
-   'SECURITY_DEFINITIONS': {
-      'Basic': {
-            'type': 'basic'
-      },
-      'Bearer': {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
             'type': 'apiKey',
+            'in': 'header',
             'name': 'Authorization',
-            'in': 'header'
-      }
-   }
+            'description': 'Token-based authentication. Format: Token <token>',
+        }
+    },
+    'USE_SESSION_AUTH': False,
 }
+
 
 
 ROOT_URLCONF = 'config.urls'

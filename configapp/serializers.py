@@ -1,6 +1,10 @@
 from rest_framework import serializers
-from .models import *
+from django.contrib.auth import get_user_model
+from .models import Actor, Movie, CommitMovie
 from django.contrib.auth import authenticate
+
+
+User = get_user_model()
 
 class ActorSerializers(serializers.ModelSerializer):
     class Meta:
@@ -19,16 +23,17 @@ class CommitMoviesSerializers(serializers.ModelSerializer):
         read_only_fields = ["author"]
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    phone_number = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
-        username = attrs.get('username')
+        phone_number = attrs.get('phone_number')
         password = attrs.get('password')
 
         # Foydalanuvchini tekshirish
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(phone_number=phone_number)
+            print(user)
         except User.DoesNotExist:
             raise serializers.ValidationError({
                 "success": False,
@@ -36,11 +41,11 @@ class LoginSerializer(serializers.Serializer):
             })
 
         # Parolni tekshirish
-        auth_user = authenticate(username=username, password=password)
+        auth_user = authenticate(phone_number=phone_number, password=password)
         if auth_user is None:
             raise serializers.ValidationError({
                 "success": False,
-                "detail": "Username or password is invalid"
+                "detail": "Phone_number or password is invalid"
             })
 
         # Tekshiruvdan o'tgan userni attrs ichiga joylash
