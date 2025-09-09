@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Actor, Movie, CommitMovie
+from .models import Actor, Movie, CommitMovie, PhoneOTP
 from django.contrib.auth import authenticate
 
 
@@ -51,3 +51,26 @@ class LoginSerializer(serializers.Serializer):
         # Tekshiruvdan o'tgan userni attrs ichiga joylash
         attrs["user"] = auth_user
         return attrs    
+    
+class SentSmsSerializer(serializers.Serializer):
+        phone_number = serializers.CharField()        
+
+class VerifyOTPSerializer(serializers.Serializer):
+    phone_number = serializers.CharField(max_length=20)
+    otp = serializers.CharField(max_length=6)
+
+    def validate(self, data):
+        phone = data.get("phone_number")
+        otp = data.get("otp")
+
+        try:
+            otp_obj = PhoneOTP.objects.get(phone_number=phone)
+        except PhoneOTP.DoesNotExist:
+            raise serializers.ValidationError({"phone_number": "Bunday telefon raqam topilmadi"})
+
+        if otp_obj.otp != otp or not otp_obj.is_valid():
+            raise serializers.ValidationError({"otp": "OTP noto'g'ri yoki muddati tugagan"})
+
+        # Agar hammasi to‘g‘ri bo‘lsa, otp obyektni serializer ichida saqlaymiz
+        data["otp_obj"] = otp_obj
+        return data

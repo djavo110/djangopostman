@@ -12,6 +12,9 @@ from .make_token import *
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from .add_paginition import CustomPagination
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
 
 class ActorModelViewSet(ModelViewSet):
     queryset = Actor.objects.all()
@@ -111,15 +114,18 @@ class Login(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = get_object_or_404(User, phone_number=serializer.validated_data.get("phone_number"))
+        user = get_object_or_404(User, phone_number =serializer.validated_data.get("phone_number"))
         print (user)
         token = get_tokens_for_user(user)
         return Response(data=token, status=status.HTTP_200_OK)
 
 # 1) Telefon yuborish -> OTP generatsiya qilish
 class SendOTPView(APIView):
+    @swagger_auto_schema(request_body=SentSmsSerializer)
     def post(self, request):
-        phone = request.data.get("phone_number")
+        serializer = SentSmsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        phone = serializer.validated_data.get("phone_number")
         if not phone:
             return Response({"error": "Telefon raqam kiritilishi kerak"}, status=400)
 
@@ -134,30 +140,26 @@ class SendOTPView(APIView):
 
 # 2) OTP tekshirish -> user login
 class VerifyOTPView(APIView):
+    @swagger_auto_schema(request_body=VerifyOTPSerializer)
     def post(self, request):
-        phone = request.data.get("phone_number")
-        otp = request.data.get("otp")
+        serializer = VerifyOTPSerializer(data=request.data)
+        if serializer.is_valid():
+            otp_obj = serializer.validated_data["otp_obj"]
+            phone = serializer.validated_data["phone_number"]
 
-        try:
-            otp_obj = PhoneOTP.objects.get(phone_number=phone)
-        except PhoneOTP.DoesNotExist:
-            return Response({"error": "Bunday telefon raqam topilmadi"}, status=400)
-
-        if otp_obj.otp == otp and otp_obj.is_valid():
+            # OTP tasdiqlash
             otp_obj.is_verified = True
             otp_obj.save()
 
             # User yaratamiz yoki mavjudini olamiz
             user, created = User.objects.get_or_create(phone_number=phone)
 
-            # JWT token qaytarish
-            from rest_framework_simplejwt.tokens import RefreshToken
+            # JWT token qaytaramiz
             refresh = RefreshToken.for_user(user)
-
             return Response({
                 "message": "OTP tasdiqlandi",
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
             })
 
-        return Response({"error": "OTP noto'g'ri yoki muddati tugagan"}, status=400)
+        return Response(serializer.errors, status=400)
