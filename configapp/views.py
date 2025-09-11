@@ -15,21 +15,30 @@ from .add_paginition import CustomPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 
 class StaffRegister(APIView):
-    # permission_classes = [IsAuthenticated]
     @swagger_auto_schema(request_body=UserSerializer)
     def post(self, request):
-            serializer = UserSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            data = serializer.validated_data
-            User.objects.create_user(phone_number=data['phone_number'], password=data['password'])
-            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-    
-class StraffList(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-            users = User.objects.all()
-            serializer = UserSerializer(users, many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        serializer = UserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        phone = data['phone_number']
+        try:
+            otp_obj = PhoneOTP.objects.get(phone_number=phone)
+        except PhoneOTP.DoesNotExist:
+            return Response({"error": "Bu telefon raqam uchun OTP yuborilmagan"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not otp_obj.is_verified:
+            return Response({"error": "Telefon raqam OTP orqali tasdiqlanmagan"}, status=status.HTTP_400_BAD_REQUEST)
+
+        User.objects.create_user(
+            phone_number=phone,
+            password=data['password']
+        )
+
+        otp_obj.delete()
+
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
         
 
 
@@ -172,18 +181,18 @@ class VerifyOTPView(APIView):
         else:
             return Response("error" "Xato kod kiritldi yoki muddati tugagan", status=400)
         
-class ChangePasswordApi(APIView):
-    permission_classes = [IsAuthenticated]
-    @swagger_auto_schema(request_body=ChangePasswordSerializer)
-    def post(self,request):
-        user = request.user
-        serializer = ChangePasswordSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        new_password = serializer.validated_data.get('new_password')
-        new_password1 = serializer.validated_data.get('new_password1')
-        if new_password1 == new_password:
-            user.set_password(new_password)
-            user.save()
-            return Response({'detail':"Parol uzgartirildi"})
-        else:
-            return Response({"detail": "Parollar mos emas "}, status=status.HTTP_400_BAD_REQUEST)
+# class ChangePasswordApi(APIView):
+#     permission_classes = [IsAuthenticated]
+#     @swagger_auto_schema(request_body=ChangePasswordSerializer)
+#     def post(self,request):
+#         user = request.user
+#         serializer = ChangePasswordSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         new_password = serializer.validated_data.get('new_password')
+#         new_password1 = serializer.validated_data.get('new_password1')
+#         if new_password1 == new_password:
+#             user.set_password(new_password)
+#             user.save()
+#             return Response({'detail':"Parol uzgartirildi"})
+#         else:
+#             return Response({"detail": "Parollar mos emas "}, status=status.HTTP_400_BAD_REQUEST)

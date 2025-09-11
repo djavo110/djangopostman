@@ -90,6 +90,6 @@ class VerifyOTPSerializer(serializers.Serializer):
         data["otp_obj"] = otp_obj
         return data
     
-class ChangePasswordSerializer(serializers.Serializer):
-    new_password = serializers.CharField(required=True, min_length=6)
-    new_password1 = serializers.CharField(required=True, min_length=6)
+# class ChangePasswordSerializer(serializers.Serializer):
+#     new_password = serializers.CharField(required=True, min_length=6)
+#     new_password1 = serializers.CharField(required=True, min_length=6)
