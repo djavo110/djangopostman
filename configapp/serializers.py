@@ -6,6 +6,21 @@ from django.contrib.auth import authenticate
 
 User = get_user_model()
 
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ( 'phone_number', 'email', 'password', 'is_admin', 'is_staff', 'is_student')
+        read_only_fields = ['is_active', 'is_teacher']
+        
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
 class ActorSerializers(serializers.ModelSerializer):
     class Meta:
         model = Actor
@@ -74,3 +89,7 @@ class VerifyOTPSerializer(serializers.Serializer):
         # Agar hammasi to‘g‘ri bo‘lsa, otp obyektni serializer ichida saqlaymiz
         data["otp_obj"] = otp_obj
         return data
+    
+class ChangePasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(required=True, min_length=6)
+    new_password1 = serializers.CharField(required=True, min_length=6)
